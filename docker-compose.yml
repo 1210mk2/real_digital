@@ -1,0 +1,61 @@
+version: "3.3"
+
+services:
+  nginx:
+    container_name: rd-nginx
+    build:
+      context: .
+      dockerfile: docker/nginx.Dockerfile
+    ports:
+      - 8098:80
+    depends_on:
+      - fpm
+    volumes:
+      - ./:/var/www/rd-docker
+    networks:
+      - frontend
+      - backend
+
+  fpm:
+    container_name: rd-fpm
+    build:
+      context: .
+      dockerfile: docker/fpm.Dockerfile
+    extra_hosts:
+      host.docker.internal: host-gateway
+    volumes:
+      - ./:/var/www/rd-docker
+    depends_on:
+      - mysql
+    networks:
+      - backend
+
+  mysql:
+    container_name: rd-mysql
+    image: mysql:5.7
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rd
+    networks:
+      - backend
+
+  phpmyadmin:
+    container_name: rd-pma
+    image: phpmyadmin/phpmyadmin
+    restart: always
+    ports:
+      - 8081:80
+    environment:
+      - PMA_HOST=mysql
+      - PMA_USER=root
+      - PMA_PASSWORD=root
+    networks:
+      - frontend
+      - backend
+
+networks:
+  frontend:
+    name: proxy_proxy
+  backend:
