@@ -3,7 +3,7 @@ Solution is using composer.
 
 There will be 4 docker containers arranged: nginx, fpm, mysql and pma.
 
-##Prerequisites
+## Prerequisites
 
 1) you should have docker with docker-compose installed
 2) 1.5 Gb of free space
@@ -18,7 +18,7 @@ create tables from sql dump voucher_approve.sql
 docker exec -i rd-mysql mysql -uroot -proot rd < voucher_approve.sql
 ```
 
-##Solution description
+## Solution description
 
 The best way to make a voucher module separate of an order is to divide it by message broker, eg. RabbitMQ.
 Imagine, we have the order created and we send a message to a Rabbit with order parameters.
@@ -69,7 +69,7 @@ Due to thoughts of simplicity I've limited my solution:
 7) I don't provide any ORM implementation or so.
 8) As was figured out, customer_id is not necessary. It is kept to show that voucher strategy could be selected by any other rule.  
 
-###Pros
+### Pros
 
 1) If the same order comes in parallel instances, we have a protection.
 2) If the same order come again later (eg. by MQ fault and resend then), we have a protection.
@@ -77,7 +77,7 @@ Due to thoughts of simplicity I've limited my solution:
 4) No Db lock or transaction lock.
 5) Same Db load (select + insert vs insert + select).
 
-###Cons
+### Cons
 
 1) The worst case if Db becomes off after "the fact" but before the EOK. Should be solved manually by check the time of loss, selecting "facts" in around that time, and check if customers are happy.
 2) "The fact" record redundancy. We can achieve duplicates, but it should be much less than single records. It is entrusted to reliability of MQ.    
