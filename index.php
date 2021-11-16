@@ -9,7 +9,7 @@ use App\Services\Voucher\VoucherDbService;
 $json = '{
   "order_id": 5,
   "customer_id": 55,
-  "total": 517.23
+  "total": 117.23
 }';
 
 $json_parsed = json_decode($json);
