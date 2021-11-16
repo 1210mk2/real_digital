@@ -58,6 +58,12 @@ class Db implements DbInterface
         return $this->getFetchIterator($statement);
     }
 
+    public function execute(string $sql, ?array $params): void
+    {
+        $statement = $this->prepareStatement($sql);
+        $this->executeStatement($statement, $params);
+    }
+
     private function prepareStatement(string $sql): PDOStatement
     {
         return $this->getPdo()->prepare($sql, [PDO::ATTR_CURSOR => PDO::CURSOR_FWDONLY]);
@@ -65,7 +71,12 @@ class Db implements DbInterface
 
     private function executeStatement(PDOStatement &$statement, ?array $params): void
     {
-        $statement->execute($params);
+        $result = $statement->execute($params);
+        if ($result === false) {
+            $error   = $statement->errorInfo();
+            $message = "[" . $error[0] . "]: " . $error[2];
+            throw new \Exception("SQL result is false: $message");
+        }
     }
 
     private function getFetchIterator(PDOStatement $statement): \Iterator
