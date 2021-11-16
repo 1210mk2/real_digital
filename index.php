@@ -3,37 +3,45 @@ require_once 'vendor/autoload.php';
 
 use App\System\Db\Db;
 use App\Services\Data\OrderInputData;
+use App\Services\Voucher\Campaign\StrategySelector;
+use App\Services\Voucher\VoucherDbService;
 
 $json = '{
-  "order_id": 2,
+  "order_id": 5,
   "customer_id": 55,
-  "total": 107.23
+  "total": 517.23
 }';
 
 $json_parsed = json_decode($json);
 
 $orderInput = OrderInputData::fromArray([
+
     'order_id'      => $json_parsed->order_id,
     'customer_id'   => $json_parsed->customer_id,
     'total'         => $json_parsed->total,
 ]);
-var_dump($orderInput);
 
-$_db = new Db();
 
-$sql = "SELECT *
-FROM voucher_approve
-LEFT JOIN brands b ON b.id = g.brand_id
+$campaign = StrategySelector::detectStrategy($orderInput);
 
-WHERE order_id = :order_id
-AND voucher_campaign = :voucher_campaign
+if (!$campaign) { //not applicable
+    echo 0;
+    die();
+}
 
-";
-$params = [
-    ':order_id'             => $orderInput->order_id,
-    ':voucher_campaign'     => 1,
-];
+$_db            = new Db();
+$voucherService = new VoucherDbService($_db);
+$voucherService->addApprovedOrder($orderInput, $campaign);
 
-$data = $_db->get($sql, $params);
+$applicationsCount = $voucherService->selectExistingAprovementsCount($orderInput, $campaign);
 
-var_dump($data);
+if ($applicationsCount == 1) {
+    echo $campaign->getId();
+    die();
+}
+
+if ($applicationsCount == 0) {
+    throw new Exception("Something wrong with Db insert");
+}
+
+echo 0;
